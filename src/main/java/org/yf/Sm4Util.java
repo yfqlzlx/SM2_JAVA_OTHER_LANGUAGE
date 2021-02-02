@@ -12,16 +12,22 @@ import java.security.Security;
 import java.util.Base64;
 
 public class Sm4Util {
-    /**
-     * SM4算法目前只支持128位（即密钥16字节）
-     */
-    public static final int DEFAULT_KEY_SIZE = 128;
     private static final String ALGORITHM_NAME = "SM4";
 
     static {
         Security.addProvider(new BouncyCastleProvider());
     }
 
+    /**
+     * 加密
+     * @param mode 分组模式
+     * @param padding 填充类型
+     * @param iv 偏移向量
+     * @param key 对称密钥
+     * @param content 明文
+     * @return 加密后的
+     * @throws GeneralSecurityException 加密模式或填充错误
+     */
     public static byte[] encrypt(Sm4Mode mode, Sm4Padding padding, byte[] iv, byte[] key, byte[] content) throws GeneralSecurityException {
         Cipher cipher;
         if(Sm4Mode.CBC.equals(mode)){
@@ -97,9 +103,9 @@ public class Sm4Util {
     }
 
 
-    public static void main(String[] args) throws Exception{
+//    public static void main(String[] args) throws Exception{
 //        String source = "Source1N123111111asbc我不是张三123";
-        byte[] iv = new byte[]{0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15};
+//        byte[] iv = new byte[]{0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15};
 //        String sm4Key = UUID.randomUUID().toString().replaceAll("-", "").substring(0, 16);
 //        System.out.println("sm4Key:\t" + sm4Key);
 //        byte[] encrypt = Sm4Util.encrypt(Sm4Mode.CBC, Sm4Padding.PADDING_PKCS5, iv, sm4Key.getBytes(StandardCharsets.UTF_8), source.getBytes(StandardCharsets.UTF_8));
@@ -111,9 +117,9 @@ public class Sm4Util {
 //        byte[] decrypt = Sm4Util.decrypt(Sm4Mode.CBC, Sm4Padding.PADDING_PKCS5, iv, sm4Key.getBytes(StandardCharsets.UTF_8), decode);
 //        System.out.println("解密后： \t" + new String(decrypt, StandardCharsets.UTF_8));
 
-        String base64Str = "9o0pC1Be32veSQiUHDo+7rTpIWdQ05DkFSQpdglqyog=";
-        String key = "b8677db2e72240f6";
-        byte[] decrypt = Sm4Util.decrypt(Sm4Mode.CBC, Sm4Padding.PADDING_PKCS5, iv, key.getBytes(StandardCharsets.UTF_8), Base64.getDecoder().decode(base64Str.getBytes(StandardCharsets.UTF_8)));
-        System.out.println(new String(decrypt, StandardCharsets.UTF_8));
-    }
+//        String base64Str = "9o0pC1Be32veSQiUHDo+7rTpIWdQ05DkFSQpdglqyog=";
+//        String key = "b8677db2e72240f6";
+//        byte[] decrypt = Sm4Util.decrypt(Sm4Mode.CBC, Sm4Padding.PADDING_PKCS5, iv, key.getBytes(StandardCharsets.UTF_8), Base64.getDecoder().decode(base64Str.getBytes(StandardCharsets.UTF_8)));
+//        System.out.println(new String(decrypt, StandardCharsets.UTF_8));
+//    }
 }
