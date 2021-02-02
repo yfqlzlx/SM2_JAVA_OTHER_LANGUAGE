@@ -1,4 +1,4 @@
-package org.yf;
+package org.yf.util;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
@@ -220,17 +220,4 @@ public class Sm3Util {
         int d2 = n % 16;
         return ""+ HEX_DIGITS[d1] + HEX_DIGITS[d2];
     }
-
-
-//    public static void main(String[] args) throws IOException {
-//        String target = "MzE3YmQ1Zjg0ODdhYmIxZTg3ZGVkMzE0Y2IyYjAyNjBiN2Q5MTU3MDdhNTJlODA4MTAxNjc2MzNmZTdmMDdlYw==";
-//        //               MzE3YmQ1Zjg0ODdhYmIxZTg3ZGVkMzE0Y2IyYjAyNjBiN2Q5MTU3MDdhNTJlODA4MTAxNjc2MzNmZTdmMDdlYw==
-//        String source = "abcdefc我是123waz11";
-//        byte[] hash = Sm3Util.digest(source.getBytes(StandardCharsets.UTF_8));
-//        String s = byteArrayToHexString(hash);
-//        System.out.println(s);
-//        String sm3Str = new String(Base64.getEncoder().encode(s.getBytes(StandardCharsets.UTF_8)), StandardCharsets.UTF_8);
-//        System.out.println(sm3Str);
-//        System.out.println(target.equals(sm3Str));
-//    }
 }

@@ -1,15 +1,15 @@
-package org.yf;
+package org.yf.util;
 
 import org.bouncycastle.jce.provider.BouncyCastleProvider;
+import org.yf.enums.Sm4Mode;
+import org.yf.enums.Sm4Padding;
 
 import javax.crypto.Cipher;
 import javax.crypto.spec.IvParameterSpec;
 import javax.crypto.spec.SecretKeySpec;
-import java.nio.charset.StandardCharsets;
 import java.security.GeneralSecurityException;
 import java.security.Key;
 import java.security.Security;
-import java.util.Base64;
 
 public class Sm4Util {
     private static final String ALGORITHM_NAME = "SM4";
@@ -73,53 +73,4 @@ public class Sm4Util {
         cipher.init(mode, sm4Key, ivParameterSpec);
         return cipher;
     }
-
-    public static enum Sm4Mode{
-        CBC("CBC"),
-        ECB("ECB");
-        private String name;
-        Sm4Mode(String name) {
-            this.name = name;
-        }
-        public String getName() {
-            return name;
-        }
-    }
-
-    public static enum Sm4Padding{
-        /**
-         * NoPadding模式，需要用户保证数据是块长度的倍数
-         */
-        PADDING_NO("NoPadding"),
-        PADDING_PKCS5("PKCS5Padding"),
-        PADDING_PKCS7("PKCS7Padding");
-        private String name;
-        Sm4Padding(String name) {
-            this.name = name;
-        }
-        public String getName() {
-            return name;
-        }
-    }
-
-
-//    public static void main(String[] args) throws Exception{
-//        String source = "Source1N123111111asbc我不是张三123";
-//        byte[] iv = new byte[]{0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15};
-//        String sm4Key = UUID.randomUUID().toString().replaceAll("-", "").substring(0, 16);
-//        System.out.println("sm4Key:\t" + sm4Key);
-//        byte[] encrypt = Sm4Util.encrypt(Sm4Mode.CBC, Sm4Padding.PADDING_PKCS5, iv, sm4Key.getBytes(StandardCharsets.UTF_8), source.getBytes(StandardCharsets.UTF_8));
-//        String base64Str = new String(Base64.getEncoder().encode(encrypt));
-//        System.out.println("base64Str:" + base64Str);
-//        System.out.println("==================================");
-//
-//        byte[] decode = Base64.getDecoder().decode(base64Str.getBytes(StandardCharsets.UTF_8));
-//        byte[] decrypt = Sm4Util.decrypt(Sm4Mode.CBC, Sm4Padding.PADDING_PKCS5, iv, sm4Key.getBytes(StandardCharsets.UTF_8), decode);
-//        System.out.println("解密后： \t" + new String(decrypt, StandardCharsets.UTF_8));
-
-//        String base64Str = "9o0pC1Be32veSQiUHDo+7rTpIWdQ05DkFSQpdglqyog=";
-//        String key = "b8677db2e72240f6";
-//        byte[] decrypt = Sm4Util.decrypt(Sm4Mode.CBC, Sm4Padding.PADDING_PKCS5, iv, key.getBytes(StandardCharsets.UTF_8), Base64.getDecoder().decode(base64Str.getBytes(StandardCharsets.UTF_8)));
-//        System.out.println(new String(decrypt, StandardCharsets.UTF_8));
-//    }
 }

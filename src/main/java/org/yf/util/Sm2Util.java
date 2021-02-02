@@ -1,4 +1,4 @@
-package org.yf;
+package org.yf.util;
 
 import org.bouncycastle.asn1.*;
 import org.bouncycastle.asn1.pkcs.PrivateKeyInfo;
@@ -12,6 +12,7 @@ import org.bouncycastle.openssl.PEMParser;
 import org.bouncycastle.openssl.jcajce.JcaPEMKeyConverter;
 import org.bouncycastle.util.io.pem.PemObject;
 import org.bouncycastle.util.io.pem.PemReader;
+import org.yf.enums.Sm2Struct;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
@@ -99,14 +100,23 @@ public class Sm2Util {
         return (BCECPrivateKey) kf.generatePrivate(peks);
     }
 
+    /**
+     * 公钥加密
+     * @see Sm2Util#encrypt(org.yf.enums.Sm2Struct, byte[], org.bouncycastle.math.ec.ECPoint)
+     */
+    public static byte[] encrypt(byte[] source, ECPoint publicKey) throws IOException{
+        return encrypt(Sm2Struct.C1C3C2, source, publicKey);
+    }
+
 	/**
 	 * 公钥加密
+     * @param struct 密文结构
 	 * @param source 明文
 	 * @param publicKey 公钥
 	 * @return 密文
      * @throws IOException ASN1编码失败
 	 */
-	public static byte[] encrypt(byte[] source, ECPoint publicKey) throws IOException{
+	public static byte[] encrypt(Sm2Struct struct, byte[] source, ECPoint publicKey) throws IOException{
         publicKey = publicKey.normalize();
 		byte[] c1Buffer;
 		ECPoint kpb;
@@ -149,23 +159,45 @@ public class Sm2Util {
 //		System.arraycopy(C3, 0, encryptResult, C1Buffer.length , C3.length);
 //      System.arraycopy(C2, 0, encryptResult, C1Buffer.length + C3.length, C2.length);
 
-        // 9、输出C1C3C2格式的ASN1，选择Vector保证输出顺序
+        // 9、输出ASN1，选择Vector保证输出顺序
         ASN1EncodableVector vector = new ASN1EncodableVector();
         vector.add(new ASN1Integer(c1.getXCoord().toBigInteger()));
         vector.add(new ASN1Integer(c1.getYCoord().toBigInteger()));
-        vector.add(new DEROctetString(c3));
-        vector.add(new DEROctetString(c2));
+        if(Sm2Struct.C1C2C3.equals(struct)){
+            vector.add(new DEROctetString(c2));
+            vector.add(new DEROctetString(c3));
+        }else{
+            vector.add(new DEROctetString(c3));
+            vector.add(new DEROctetString(c2));
+        }
         DERSequence seq = new DERSequence(vector);
         return seq.getEncoded();
 	}
 
+    public static String decrypt(Sm2Struct struct, BCECPrivateKey privateKey, byte[] encryptData) throws IOException{
+	    return decrypt(struct, privateKey.getD(), encryptData);
+    }
+
+    public static String decrypt(BCECPrivateKey privateKey, byte[] encryptData) throws IOException{
+        return decrypt(Sm2Struct.C1C3C2, privateKey.getD(), encryptData);
+    }
+
+    public static String decrypt(BigInteger privateKey, byte[] encryptData) throws IOException{
+        return decrypt(Sm2Struct.C1C3C2, privateKey, encryptData);
+    }
+
+
 	/**
 	 * 私钥解密
-	 * @param encryptData  密文数据字节数组，C1C2C3，如果是C1C3C2需要先转换
-	 * @param privateKey 私钥的D值
+     * @param struct 密文结构
+     * @param privateKey 私钥的D值
+     * @param encryptData  密文数据字节数组，C1C2C3，如果是C1C3C2需要先转换
 	 * @return 明文
 	 */
-	public static String decrypt(byte[] encryptData, BigInteger privateKey) throws IOException{
+	public static String decrypt(Sm2Struct struct, BigInteger privateKey, byte[] encryptData) throws IOException{
+	    if(Sm2Struct.C1C3C2.equals(struct)){
+            encryptData = fromC1C3C2ToC1C2C3(encryptData);
+        }
 		byte[] c1Byte = new byte[65];
 		System.arraycopy(encryptData, 0, c1Byte, 0, c1Byte.length);
 		// 私钥要归一化，否则会解密失败(t值不为1)
@@ -202,10 +234,10 @@ public class Sm2Util {
 
 		System.arraycopy(encryptData, encryptData.length - DIGEST_LENGTH, C3, 0, DIGEST_LENGTH);
         byte[] u = sm3hash(point2x(dBC1), M, point2y(dBC1));
-        LOGGER.log(Level.INFO, "解密结果C3验证：【{0}】",  Arrays.equals(u, C3));
+        LOGGER.log(Level.FINE, "解密结果C3验证：【{0}】",  Arrays.equals(u, C3));
         if(!Arrays.equals(u, C3)){
             // 目前本语言内的SM3没问题，与其他语言交互的SM3签名可能会有错误
-            LOGGER.log(Level.WARNING, "SM3校验错误");
+            LOGGER.log(Level.FINE, "SM3校验错误");
         }
         return new String(M, StandardCharsets.UTF_8);
 	}
@@ -377,26 +409,4 @@ public class Sm2Util {
         byteArray[3] = (byte) (i & 0xFF);
         return byteArray;
     }
-
-//	public static void main(String[] args) throws Exception{
-//        // 加密
-//        String sm4Key = UUID.randomUUID().toString().replaceAll("-", "").substring(0, 16);
-//        System.out.println("原始sm4Key：" + sm4Key);
-//        BCECPublicKey publicKey = convertX509ToPublicKey(new FileReader("D:\\sm2PubKey.pem"));
-//        // 以C1C3C2编码的ASN1输出
-//        byte[] encrypt = Sm2Util.encrypt(sm4Key.getBytes(StandardCharsets.UTF_8), publicKey.getQ());
-//
-//        String base64Encrypt = new String(Base64.getEncoder().encode(encrypt));
-//        System.out.println("base64 sm4Key:" + base64Encrypt);
-//
-//        // 解密
-//        BCECPrivateKey privateKey = convertPkcs8ToPrivateKey(new FileReader("D:\\sm2PrivateKey.pem"));
-//        BigInteger d = privateKey.getD();
-//        byte[] source = Base64.getDecoder().decode(base64Encrypt.getBytes(StandardCharsets.UTF_8));
-//        byte[] bytes = fromC1C3C2ToC1C2C3(source);
-//
-//        String decrypt = Sm2Util.decrypt(bytes, d);
-//        System.out.println("解密后sm4Key：" + decrypt);
-//        System.out.println("over");
-//	}
 }
